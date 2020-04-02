@@ -1,0 +1,1 @@
+docker run -it samtecspg/mason-spark:v2.4.5 /bin/bash

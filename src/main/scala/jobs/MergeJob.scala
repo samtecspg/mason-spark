@@ -12,8 +12,8 @@ class MergeJob {
       SparkSession.builder()
         .master("local[*]")
         .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.access.key", conf.access_key.getOrElse(""))
-        .config("spark.hadoop.fs.s3a.secret.key", conf.secret_key.getOrElse(""))
+        .config("spark.hadoop.fs.s3a.access.key", conf.access_key)
+        .config("spark.hadoop.fs.s3a.secret.key", conf.secret_key)
         .getOrCreate()
     }
     import spark.implicits._
@@ -23,16 +23,16 @@ class MergeJob {
     df.printSchema
 
     def extractPath(basename: String, path: String): Array[String] = {
-      val r = s"${INPUT_PATH}"
+      val r = s"${conf.input_path}"
       return s"${path}"
         .replaceFirst(r, "")
         .stripPrefix("/")
         .split("/", -1)
         .dropRight(1)
     }
-    val extractPathUDF = udf[Array[String], String](extractPath(INPUT_PATH, _))
+    val extractPathUDF = udf[Array[String], String](extractPath(conf.input_path, _))
 
-    val explodedDF = if (EXTRACT_FILE_PATHS) {
+    val explodedDF = if (conf.extract_file_path) {
       val withFileDF = df.withColumn("filename", input_file_name())
       withFileDF.select("filename").show(3)
       val extractedDF = withFileDF.withColumn("extracted_path", extractPathUDF($"filename"))
@@ -54,7 +54,7 @@ class MergeJob {
       df
     }
 
-    explodedDF.write.mode(SaveMode.Overwrite).parquet(OUTPUT_PATH)
+    explodedDF.write.mode(SaveMode.Overwrite).parquet(conf.output_path)
 
   }
 

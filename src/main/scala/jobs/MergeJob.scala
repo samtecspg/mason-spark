@@ -1,31 +1,24 @@
 package mason.spark.jobs
 
-import mason.spark.configs.JobConfig
+import mason.spark.configs.MergeConfig
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{expr, input_file_name, max, size, udf}
 
-class MergeJob extends SparkJob {
+class MergeJob {
 
-  def run(config: JobConfig) = {
-
-    val INPUT_PATH = "s3a://lake-working-copy-feb-20-2020/logistics-bi-data-publisher/prod/shipment"
-    val OUTPUT_PATH = "s3a://lake-working-copy-feb-20-2020/merged/"
-    val EXTRACT_FILE_PATHS = true
-    val REPARTITION_STRATEGY = "default"
-    val ACCESS_KEY = "***REMOVED***"
-    val SECRET_KEY = "***REMOVED***"
+  def run(conf: MergeConfig) = {
 
     val spark = {
       SparkSession.builder()
         .master("local[*]")
         .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.access.key", ACCESS_KEY)
-        .config("spark.hadoop.fs.s3a.secret.key", SECRET_KEY)
+        .config("spark.hadoop.fs.s3a.access.key", conf.access_key.getOrElse(""))
+        .config("spark.hadoop.fs.s3a.secret.key", conf.secret_key.getOrElse(""))
         .getOrCreate()
     }
     import spark.implicits._
 
-    val df = spark.read.option("mergeSchema", "true").parquet(INPUT_PATH)
+    val df = spark.read.option("mergeSchema", "true").parquet(conf.input_path)
     df.count()
     df.printSchema
 
@@ -49,12 +42,13 @@ class MergeJob extends SparkJob {
       val path_length: DataFrame = extractedDF.select(size($"extracted_path").as("path_length"))
       val maximum: Int = path_length.agg(max($"path_length")).collect().head.getInt(0)
       val column_ids: List[Int] = (0 to maximum - 1).toList
+
       def add_column(d: DataFrame, i: Int): DataFrame = {
         d.withColumn(s"dir_${i}", expr(s"extracted_path[${i}]"))
       }
+
       val explodedDF = column_ids.foldLeft(extractedDF)(add_column(_,_))
       explodedDF.show(3)
-
       explodedDF
     } else {
       df

@@ -7,7 +7,7 @@ scalaVersion := "2.11.12"
 libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.4.5"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.5"
 libraryDependencies += "org.apache.hadoop" % "hadoop-aws" % "2.7.5"
-//libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.11.336"
+libraryDependencies += "com.github.scopt" %% "scopt" % "4.0.0-RC2"
 
 assemblyMergeStrategy in assembly := {
   case PathList("javax", "ws", xs @ _*) => MergeStrategy.last

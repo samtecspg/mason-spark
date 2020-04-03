@@ -1,18 +1,19 @@
 package mason.spark.configs
 
-import mason.spark.jobs.MergeJob
-//import org.apache.log4j.{Logger}
+import scopt.OptionParser
+
+object JobConfig {
+  def zero = JobConfig("")
+}
 
 case class JobConfig(job: String = "merge") {
 
-  def run(): Unit = {
-    job match {
-      case "merge" => (new MergeJob).run(this)
-      case c: String => {
-        // Logger.getLogger("mason.spark").error(s"Job type ${c} not supported")
-        println(s"Job type ${c} not supported")
-      }
-    }
+  val parser = new OptionParser[JobConfig]("mason-spark") {
+    head("mason-spark", "0.1")
+    opt[String]('j', "job")
+      .required()
+      .valueName("<job_type>")
+      .action((x,c) => c.copy(job = x))
   }
 
 }

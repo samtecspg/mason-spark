@@ -18,7 +18,15 @@ class MergeJob {
     }
     import spark.implicits._
 
-    val df = spark.read.option("mergeSchema", "true").parquet(conf.input_path)
+    //TODO: Move this into util class
+    val input_path = if (conf.input_path.endsWith("/")) {
+      conf.input_path + "**/*"
+    } else {
+      conf.input_path
+    }
+
+    //TODO:  Support more file formats other than parquet
+    val df = spark.read.option("mergeSchema", "true").parquet(input_path)
     df.count()
     df.printSchema
 

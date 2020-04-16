@@ -1,0 +1,123 @@
+package jobs
+
+import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import mason.spark.configs.MergeConfig
+import mason.spark.jobs.MergeJob
+import org.scalatest.{BeforeAndAfter, FunSuite}
+
+import scala.reflect.io.Directory
+import java.io.File
+import org.apache.log4j.{Level, Logger}
+
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+
+class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase {
+
+  before {
+    spark.sparkContext.setLogLevel("FATAL")
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("akka").setLevel(Level.OFF)
+    Logger.getLogger("spark").setLevel(Level.OFF)
+  }
+
+  after {
+    val directory = new Directory(new File(".tmp"))
+    directory.deleteRecursively()
+  }
+
+  def assertEquals(df: DataFrame, data: String) = {
+    val splitted = data.split("\n")
+    val a = splitted
+      .zipWithIndex.filter{r => (Array(0,1,2,3,splitted.length,splitted.length - 1, splitted.length - 2).contains(r._2) == false)}
+      .map{r => r._1.stripPrefix("|").stripSuffix("|").split('|').map(_.trim()).toSeq}.toSeq
+
+    // Strictly a stringly test for now
+    val b = df.collect().map{r =>
+      r.toSeq.map{a => if (a == null) { "null" } else { a.toString() } }
+    }.toSeq
+    assert(a == b)
+  }
+
+  test("valid csv test") {
+    val config = new MergeConfig("src/test/resources/test_csv/", ".tmp/merged/")
+
+    MergeJob.run(config, spark)
+
+    val mergedDF = spark.read.parquet(".tmp/merged")
+    val expect = """
+    +-------+-----+
+    |   type|price|
+    +-------+-----+
+    | wrench| 20.0|
+    | hammer| 10.0|
+    |wrench2| 19.0|
+    |wrench3| 14.0|
+    |wrench4| 24.0|
+    |wrench5| 30.0|
+    |hammer2|  9.0|
+    |hammer3|  5.0|
+    |hammer4| 12.0|
+    |hammer5| 20.0|
+    | wrench| 20.0|
+    | hammer| 10.0|
+    |wrench2| 19.0|
+    +-------+-----+
+    """.stripMargin
+
+    assertEquals(mergedDF, expect)
+  }
+
+  test("valid parquet") {
+
+    val config = new MergeConfig("src/test/resources/test_parquet/", ".tmp/merged/")
+
+    MergeJob.run(config, spark)
+
+    val mergedDF = spark.read.parquet(".tmp/merged")
+
+    val expect = """
+    +--------+-------+------------+--------+
+    |  widget|  price|manufacturer|in_stock|
+    +--------+-------+------------+--------+
+    | tractor|10000.0|   John Deer|    true|
+    |forklift| 4000.0|      Bobcat|    true|
+    |   crane| 5000.0|        Case|   false|
+    |  casing|   30.0|        null|    null|
+    |  wrench|   20.0|        null|    null|
+    |    bolt|   25.0|        null|    null|
+    +--------+-------+------------+--------+
+    """.stripMargin
+
+    assertEquals(mergedDF, expect)
+
+  }
+
+  test("invalid csv") {
+
+    val config = new MergeConfig("src/test/resources/test_bad_csv/", ".tmp/merged/")
+    MergeJob.run(config, spark)
+    val mergedDF = spark.read.parquet(".tmp/merged")
+    mergedDF.show()
+    val expect = """
+    +--------------+-----+
+    |          type|price|
+    +--------------+-----+
+    |        wrench| 20.0|
+    |        hammer| 10.0|
+    |       wrench2| 19.0|
+    |       wrench3| 14.0|
+    |       wrench4| 24.0|
+    |       wrench5| 30.0|
+    |       hammer2|  9.0|
+    |       hammer3|  5.0|
+    |       hammer4| 12.0|
+    |       hammer5| 20.0|
+    |asdflkajsdlkfj| null|
+    |          asdf| null|
+    +--------------+-----+
+    """.stripMargin
+
+    assertEquals(mergedDF, expect)
+  }
+
+}

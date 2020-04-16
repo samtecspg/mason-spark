@@ -1,20 +1,23 @@
 package mason.spark.configs
 
 import mason.spark.jobs.MergeJob
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 import scopt.OptionParser
 
 object MergeConfig {
-  def zero = MergeConfig("", "", false, "", "", "")
+  def zero = MergeConfig("", "")
 }
 
 case class MergeConfig(
   input_path: String,
   output_path: String,
   extract_file_path: Boolean = false,
-  repartition_keys: String,
+  repartition_keys: String = "",
+  read_headers: Boolean = true,
   //TODO: REMOVE THIS FROM MERGE CONFIG PROPER
-  access_key: String,
-  secret_key: String
+  access_key: String = "",
+  secret_key: String = ""
 ) {
 
   // TODO: Replace with scopt functional parser
@@ -34,19 +37,29 @@ case class MergeConfig(
     opt[String]('r', "repartition_keys")
       .valueName("<repartition_keys>")
       .action((x,c) => c.copy(repartition_keys = x))
+    opt[Boolean]('h', "read_headers")
+      .valueName("<repartition_keys>")
+      .action((x,c) => c.copy(read_headers = x))
     // BIG TODO:  Wrap the metastore configuration into a seperate config and pass this along so that this is not aws specific
     opt[String]('a', "access_key")
       .valueName("<access_key>")
-      .required()
       .action((x,c) => c.copy(access_key = x))
     opt[String]('s', "secret_key")
       .valueName("<secret_key>")
-      .required()
       .action((x,c) => c.copy(secret_key = x))
   }
 
+  val spark = {
+    SparkSession.builder()
+      .master("local[*]")
+      .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
+      .config("spark.hadoop.fs.s3a.access.key", access_key)
+      .config("spark.hadoop.fs.s3a.secret.key", secret_key)
+      .getOrCreate()
+  }
+
   def run() = {
-    (new MergeJob).run(this)
+    MergeJob.run(this, spark)
   }
 
 }

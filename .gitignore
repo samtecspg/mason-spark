@@ -4,3 +4,5 @@ target
 target/*
 project/target
 project/target/*
+.tmp
+.tmp/*

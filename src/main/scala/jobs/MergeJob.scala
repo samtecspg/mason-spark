@@ -4,29 +4,32 @@ import mason.spark.configs.MergeConfig
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{expr, input_file_name, max, size, udf}
 
-class MergeJob {
+object MergeJob {
 
-  def run(conf: MergeConfig) = {
+  def run(conf: MergeConfig, spark: SparkSession) = {
 
-    val spark = {
-      SparkSession.builder()
-        .master("local[*]")
-        .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.access.key", conf.access_key)
-        .config("spark.hadoop.fs.s3a.secret.key", conf.secret_key)
-        .getOrCreate()
-    }
+    val spark = conf.spark
     import spark.implicits._
 
     //TODO: Move this into util class
     val input_path = if (conf.input_path.endsWith("/")) {
-      conf.input_path + "**/*"
+      conf.input_path + "*"
     } else {
       conf.input_path
     }
 
-    //TODO:  Support more file formats other than parquet
-    val df = spark.read.option("mergeSchema", "true").parquet(input_path)
+    val reader = spark.read.option("mergeSchema", "true").option("header", conf.read_headers.toString())
+
+    //TODO:  Remove try catch
+    val df: DataFrame =
+      try {
+        reader.parquet(input_path)
+      } catch {
+        case e: org.apache.spark.SparkException => {
+          reader.csv(input_path)
+        }
+      }
+
     df.count()
     df.printSchema
 

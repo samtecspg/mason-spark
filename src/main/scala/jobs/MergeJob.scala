@@ -20,18 +20,13 @@ object MergeJob {
 
     val reader = spark.read.option("mergeSchema", "true").option("header", conf.read_headers.toString())
 
-    //TODO:  Remove try catch
-    val df: DataFrame =
-      try {
-        reader.parquet(input_path)
-      } catch {
-        case e: org.apache.spark.SparkException => {
-          reader.csv(input_path)
-        }
-      }
-
-    df.count()
-    df.printSchema
+    // TODO: Expand information being passed from metastore
+    val df = conf.input_format match {
+      case "parquet" => reader.parquet(input_path)
+      case "text-csv" => reader.csv(input_path)
+      case "json" => reader.option("multiline", true).json(input_path)
+      case "jsonl" => reader.json(input_path)
+    }
 
     def extractPath(basename: String, path: String): Array[String] = {
       val r = s"${conf.input_path}"
@@ -45,7 +40,6 @@ object MergeJob {
 
     val explodedDF = if (conf.extract_file_path) {
       val withFileDF = df.withColumn("filename", input_file_name())
-      withFileDF.select("filename").show(3)
       val extractedDF = withFileDF.withColumn("extracted_path", extractPathUDF($"filename"))
       extractedDF.select("extracted_path").show(5, false)
 
@@ -59,7 +53,6 @@ object MergeJob {
       }
 
       val explodedDF = column_ids.foldLeft(extractedDF)(add_column(_,_))
-      explodedDF.show(3)
       explodedDF
     } else {
       df

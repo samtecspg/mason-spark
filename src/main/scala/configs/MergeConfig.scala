@@ -6,11 +6,12 @@ import org.apache.spark.sql.SparkSession
 import scopt.OptionParser
 
 object MergeConfig {
-  def zero = MergeConfig("", "")
+  def zero = MergeConfig("", input_format="parquet", "")
 }
 
 case class MergeConfig(
   input_path: String,
+  input_format: String = "parquet",
   output_path: String,
   extract_file_path: Boolean = false,
   repartition_keys: String = "",
@@ -38,8 +39,11 @@ case class MergeConfig(
       .valueName("<repartition_keys>")
       .action((x,c) => c.copy(repartition_keys = x))
     opt[Boolean]('h', "read_headers")
-      .valueName("<repartition_keys>")
+      .valueName("<read_headers>")
       .action((x,c) => c.copy(read_headers = x))
+    opt[String]('h', "input_format")
+      .valueName("<input_format>")
+      .action((x,c) => c.copy(input_format = x))
     // BIG TODO:  Wrap the metastore configuration into a seperate config and pass this along so that this is not aws specific
     opt[String]('a', "access_key")
       .valueName("<access_key>")

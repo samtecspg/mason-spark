@@ -29,17 +29,17 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
     val splitted = data.split("\n")
     val a = splitted
       .zipWithIndex.filter{r => (Array(0,1,2,3,splitted.length,splitted.length - 1, splitted.length - 2).contains(r._2) == false)}
-      .map{r => r._1.stripPrefix("|").stripSuffix("|").split('|').map(_.trim()).toSeq}.toSeq
+      .map{r => r._1.stripPrefix("|").stripSuffix("|").split('|').map(_.trim()).toSeq.mkString(",")}.toSeq.sorted.mkString(",")
 
     // Strictly a stringly test for now
     val b = df.collect().map{r =>
-      r.toSeq.map{a => if (a == null) { "null" } else { a.toString() } }
-    }.toSeq
+      r.toSeq.map{a => if (a == null) { "null" } else { a.toString() } }.mkString(",")
+    }.toSeq.sorted.mkString(",")
     assert(a == b)
   }
 
   test("valid csv test") {
-    val config = new MergeConfig("src/test/resources/test_csv/", ".tmp/merged/")
+    val config = new MergeConfig("src/test/resources/test_csv/", "text-csv", ".tmp/merged/")
 
     MergeJob.run(config, spark)
 
@@ -69,7 +69,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
 
   test("valid parquet") {
 
-    val config = new MergeConfig("src/test/resources/test_parquet/", ".tmp/merged/")
+    val config = new MergeConfig("src/test/resources/test_parquet/", "parquet", ".tmp/merged/")
 
     MergeJob.run(config, spark)
 
@@ -94,10 +94,9 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
 
   test("invalid csv") {
 
-    val config = new MergeConfig("src/test/resources/test_bad_csv/", ".tmp/merged/")
+    val config = new MergeConfig("src/test/resources/test_bad_csv/", "text-csv", ".tmp/merged/")
     MergeJob.run(config, spark)
     val mergedDF = spark.read.parquet(".tmp/merged")
-    mergedDF.show()
     val expect = """
     +--------------+-----+
     |          type|price|
@@ -118,6 +117,62 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
     """.stripMargin
 
     assertEquals(mergedDF, expect)
+  }
+
+  test("valid json") {
+
+    val config = new MergeConfig("src/test/resources/test_json/", "json", ".tmp/merged/")
+    MergeJob.run(config, spark)
+    val mergedDF = spark.read.parquet(".tmp/merged")
+    val expect = """
+    +------+------+------+------+------+------+
+    |field1|field2|field3|field4|field5|field6|
+    +------+------+------+------+------+------+
+    |  test| test2| test3|  null|  null|  null|
+    |  test|  null| test3|  null|  null| test2|
+    |  null|  null|  test| test2| test3|  null|
+    +------+------+------+------+------+------+
+    """.stripMargin
+
+    assertEquals(mergedDF, expect)
+
+  }
+
+  test("valid jsonl") {
+
+    val config = new MergeConfig("src/test/resources/test_jsonl/", "jsonl", ".tmp/merged/")
+    MergeJob.run(config, spark)
+    val mergedDF = spark.read.parquet(".tmp/merged")
+    val expect = """
+    +------+------+------+------+------+------+------+------+------+-----+------+------+
+    |field1|field2|field3|field4|field5|field6|field7|field8|field9|other|other2|other3|
+    +------+------+------+------+------+------+------+------+------+-----+------+------+
+    |  test| test2| test3|  null|  null|  null|  null|  null|  null| null|  null|  null|
+    |  null|  null|  test| test2| test3|  null|  null|  null|  null| null|  null|  null|
+    |  test|  null|  null|  null|  null| test2| test3|  null|  null| null|  null|  null|
+    |  null|  null|  null|  null|  null|  null|  test| test2| test3| null|  null|  null|
+    |  null|  null|  null|  null|  null|  null|  null|  null|  null| test| test2| test3|
+    +------+------+------+------+------+------+------+------+------+-----+------+------+
+    """.stripMargin
+    assertEquals(mergedDF, expect)
+
+  }
+
+  test("complex json") {
+    val config = new MergeConfig("src/test/resources/test_json_complex/", "json", ".tmp/merged/")
+    MergeJob.run(config, spark)
+    val mergedDF = spark.read.parquet(".tmp/merged")
+    val expect = """
+    +----------------------------------------------------------------------------------------------------------------------------+-----+------+------+
+    |data                                                                                                                        |field|field2|field3|
+    +----------------------------------------------------------------------------------------------------------------------------+-----+------+------+
+    |WrappedArray([test,test2,null,null,null,null], [test,5,test3,test4,null,null], [null,null,test3,test4,[going on here],null])|null |null  |null  |
+    |WrappedArray([test,test2,null,null,null,null], [test,5,test3,test4,null,null], [null,null,test3,test4,null,things])         |null |null  |null  |
+    |null                                                                                                                        |test |test2 |test3 |
+    +----------------------------------------------------------------------------------------------------------------------------+-----+------+------+
+    """.stripMargin
+    assertEquals(mergedDF, expect)
+
   }
 
 }

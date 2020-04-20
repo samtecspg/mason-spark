@@ -67,6 +67,36 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
     assertEquals(mergedDF, expect)
   }
 
+  test("extract path") {
+    val config = new MergeConfig("src/test/resources/test_csv_path/", "text-csv", ".tmp/merged/",true)
+
+    MergeJob.run(config)
+
+    val mergedDF = spark.read.parquet(".tmp/merged").select("type", "price", "dir_0")
+
+    val expect = """
+    +-------+-----+-------------+
+    |type   |price|dir_0        |
+    +-------+-----+-------------+
+    |wrench |20.0 |manufacturer1|
+    |hammer |10.0 |manufacturer1|
+    |wrench2|19.0 |manufacturer1|
+    |wrench3|14.0 |manufacturer1|
+    |wrench4|24.0 |manufacturer1|
+    |wrench5|30.0 |manufacturer1|
+    |hammer2|9.0  |manufacturer1|
+    |hammer3|5.0  |manufacturer1|
+    |hammer4|12.0 |manufacturer1|
+    |hammer5|20.0 |manufacturer1|
+    |wrench |20.0 |manufacturer2|
+    |hammer |10.0 |manufacturer2|
+    |wrench2|19.0 |manufacturer2|
+    +-------+-----+-------------+
+    """.stripMargin
+
+    assertEquals(mergedDF, expect)
+  }
+
   test("valid parquet") {
 
     val config = new MergeConfig("src/test/resources/test_parquet/", "parquet", ".tmp/merged/")

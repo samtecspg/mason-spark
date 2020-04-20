@@ -41,7 +41,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
   test("valid csv test") {
     val config = new MergeConfig("src/test/resources/test_csv/", "text-csv", ".tmp/merged/")
 
-    MergeJob.run(config, spark)
+    MergeJob.run(config)
 
     val mergedDF = spark.read.parquet(".tmp/merged")
     val expect = """
@@ -71,7 +71,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
 
     val config = new MergeConfig("src/test/resources/test_parquet/", "parquet", ".tmp/merged/")
 
-    MergeJob.run(config, spark)
+    MergeJob.run(config)
 
     val mergedDF = spark.read.parquet(".tmp/merged")
 
@@ -95,7 +95,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
   test("invalid csv") {
 
     val config = new MergeConfig("src/test/resources/test_bad_csv/", "text-csv", ".tmp/merged/")
-    MergeJob.run(config, spark)
+    MergeJob.run(config)
     val mergedDF = spark.read.parquet(".tmp/merged")
     val expect = """
     +--------------+-----+
@@ -122,7 +122,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
   test("valid json") {
 
     val config = new MergeConfig("src/test/resources/test_json/", "json", ".tmp/merged/")
-    MergeJob.run(config, spark)
+    MergeJob.run(config)
     val mergedDF = spark.read.parquet(".tmp/merged")
     val expect = """
     +------+------+------+------+------+------+
@@ -141,7 +141,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
   test("valid jsonl") {
 
     val config = new MergeConfig("src/test/resources/test_jsonl/", "jsonl", ".tmp/merged/")
-    MergeJob.run(config, spark)
+    MergeJob.run(config)
     val mergedDF = spark.read.parquet(".tmp/merged")
     val expect = """
     +------+------+------+------+------+------+------+------+------+-----+------+------+
@@ -160,7 +160,7 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
 
   test("complex json") {
     val config = new MergeConfig("src/test/resources/test_json_complex/", "json", ".tmp/merged/")
-    MergeJob.run(config, spark)
+    MergeJob.run(config)
     val mergedDF = spark.read.parquet(".tmp/merged")
     val expect = """
     +----------------------------------------------------------------------------------------------------------------------------+-----+------+------+

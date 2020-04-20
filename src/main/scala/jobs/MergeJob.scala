@@ -6,10 +6,7 @@ import org.apache.spark.sql.functions.{expr, input_file_name, max, size, udf}
 
 object MergeJob {
 
-  def run(conf: MergeConfig, spark: SparkSession) = {
-
-    val spark = conf.spark
-    import spark.implicits._
+  def run(conf: MergeConfig) = {
 
     //TODO: Move this into util class
     val input_path = if (conf.input_path.endsWith("/")) {
@@ -17,6 +14,17 @@ object MergeJob {
     } else {
       conf.input_path
     }
+
+    val spark = {
+      SparkSession.builder()
+        .master("local[*]")
+        .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
+        .config("spark.hadoop.fs.s3a.access.key", conf.access_key)
+        .config("spark.hadoop.fs.s3a.secret.key", conf.secret_key)
+        .getOrCreate()
+    }
+
+    import spark.implicits._
 
     val reader = spark.read.option("mergeSchema", "true").option("header", conf.read_headers.toString())
 

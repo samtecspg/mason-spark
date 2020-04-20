@@ -53,17 +53,8 @@ case class MergeConfig(
       .action((x,c) => c.copy(secret_key = x))
   }
 
-  val spark = {
-    SparkSession.builder()
-      .master("local[*]")
-      .config("spark.hadoop.fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
-      .config("spark.hadoop.fs.s3a.access.key", access_key)
-      .config("spark.hadoop.fs.s3a.secret.key", secret_key)
-      .getOrCreate()
-  }
-
   def run() = {
-    MergeJob.run(this, spark)
+    MergeJob.run(this)
   }
 
 }

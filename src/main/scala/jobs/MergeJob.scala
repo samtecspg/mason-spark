@@ -30,7 +30,7 @@ object MergeJob {
     // TODO: Expand information being passed from metastore
     val df = conf.input_format match {
       case "parquet" => reader.parquet(input_path)
-      case "text-csv" => reader.csv(input_path)
+      case "text" => reader.csv(input_path)
       case "json" => reader.option("multiline", true).json(input_path)
       case "jsonl" => reader.json(input_path)
     }

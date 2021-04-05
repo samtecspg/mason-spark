@@ -1,2 +1,0 @@
-sbt assembly
-docker build . -t samtecspg/mason-spark:2.4.5_v1.02

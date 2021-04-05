@@ -1,12 +1,10 @@
 package mason.spark.configs
 
 import mason.spark.jobs.MergeJob
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.SparkSession
 import scopt.OptionParser
 
 object MergeConfig {
-  def zero = MergeConfig("", input_format="parquet", "")
+  def zero: MergeConfig = MergeConfig("", input_format="parquet", "")
 }
 
 case class MergeConfig(
@@ -16,7 +14,6 @@ case class MergeConfig(
   extract_file_path: Boolean = false,
   repartition_keys: String = "",
   read_headers: Boolean = true,
-  //TODO: REMOVE THIS FROM MERGE CONFIG PROPER
   access_key: String = "",
   secret_key: String = ""
 ) {

@@ -21,6 +21,9 @@ object Main {
             case None => println(s"Bad merge config specification ${args}")
           }
         }
+        else {
+          println(f"Job type not supported ${config.job}")
+        }
       case None => println(s"Bad config specification ${args}")
     }
   }

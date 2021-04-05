@@ -1,17 +1,17 @@
 package jobs
 
-import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import com.holdenkarau.spark.testing.{DataFrameSuiteBase, SharedSparkContext}
 import mason.spark.configs.MergeConfig
 import mason.spark.jobs.MergeJob
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.reflect.io.Directory
 import java.io.File
 import org.apache.log4j.{Level, Logger}
+import org.apache.spark.sql.DataFrame
 
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-
-class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase {
+class MergeJobTest extends AnyFunSuite with BeforeAndAfter with DataFrameSuiteBase with SharedSparkContext {
 
   before {
     spark.sparkContext.setLogLevel("FATAL")
@@ -202,7 +202,14 @@ class MergeJobTest extends FunSuite with BeforeAndAfter with DataFrameSuiteBase 
     +----------------------------------------------------------------------------------------------------------------------------+-----+------+------+
     """.stripMargin
     assertEquals(mergedDF, expect)
-
   }
+
+//  test("mixed type parquet") {
+//    val config = new MergeConfig("src/test/resources/test_conflicting_parquet", "parquet", ".tmp/merged/")
+//    MergeJob.run(config)
+//    val mergedDF = spark.read.parquet(".tmp/merged")
+//    print(mergedDF.schema)
+//
+//  }
 
 }

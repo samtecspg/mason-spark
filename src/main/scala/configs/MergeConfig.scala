@@ -6,7 +6,6 @@ object MergeConfig {
   val zero = MergeConfig("", input_format="parquet", "")
 
   val parser = new OptionParser[MergeConfig]("mason-spark") {
-    head("mason-spark", "0.1")
     opt[String]('i', "input_path")
       .required()
       .valueName("<input_path>")

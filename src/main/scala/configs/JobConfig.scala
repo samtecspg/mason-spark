@@ -1,8 +1,7 @@
 package mason.spark.configs
 
-import jobs.{PreviewJob, SummaryJob}
-import mason.spark.jobs.{FormatJob, MergeJob}
-import scopt.{OptionParser, Zero}
+import mason.spark.jobs.{FormatJob, MergeJob, PreviewJob, SummaryJob}
+import scopt.OptionParser
 
 sealed trait JobType
 case object FormatType extends JobType

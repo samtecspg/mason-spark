@@ -5,7 +5,7 @@ import mason.spark.configs.FormatConfig
 object FormatJob {
 
   def run(config: FormatConfig): Either[Exception, String] = {
-    Left(new Exception("Not implemented yet"))
+    Left(new Exception("Job not implemented yet"))
   }
 
 

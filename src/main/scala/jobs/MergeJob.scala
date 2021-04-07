@@ -3,50 +3,43 @@ package mason.spark.jobs
 import java.nio.file.Paths
 import mason.spark.configs.MergeConfig
 import mason.spark.models.ExtractPath
+import models.ReadPath
 import org.apache.spark.sql._
 import org.apache.spark.sql.SparkSession
 
 object MergeJob {
 
-  def run(conf: MergeConfig) = {
+  def run(config: MergeConfig): Either[Exception, String] = {
 
     //TODO: Move this into util class
-    val input_path = if (conf.input_path.endsWith("/")) {
-      conf.input_path + "*"
+    val input_path = if (config.input_path.endsWith("/")) {
+      config.input_path + "*"
     } else {
-      conf.input_path
+      config.input_path
     }
 
     val spark = {
       SparkSession.builder()
         .master("local[*]")
-        .config("fs.s3a.access.key", conf.access_key)
-        .config("fs.s3a.secret.key", conf.secret_key)
+        .config("fs.s3a.access.key", config.access_key)
+        .config("fs.s3a.secret.key", config.secret_key)
         .getOrCreate()
     }
 
-    val reader = spark.read.option("mergeSchema", "true")
-
     import spark.implicits._
-    val df: Option[DataFrame] = conf.input_format match {
-      case "parquet" => Some(reader.parquet(input_path))
-      case "text" | "text-csv" | "csv" => Some(reader.option("header", conf.read_headers.toString()).csv(input_path))
-      case "json" => Some(reader.option("multiline", true).json(input_path))
-      case "jsonl" => Some(reader.json(input_path))
-      case _: String => println(f"Unsupported input format: ${conf.input_format}"); None
-    }
+    val reader = spark.read.option("inferSchema", true).option("mergeSchema", true)
 
-    val abs_input_path = Paths.get(conf.input_path).toUri().toString()
+    val df: Either[Exception, DataFrame]  = ReadPath.from_format(config.input_format, input_path, reader, config.read_headers)
+    val abs_input_path = Paths.get(config.input_path).toUri().toString()
 
-    val explodedDF = if (conf.extract_file_path) {
+    val explodedDF = if (config.extract_file_path) {
       df.map { d => ExtractPath.extract(d, abs_input_path) }
     } else {
       df
     }
 
-    explodedDF.map{d => d.write.mode(SaveMode.Overwrite).parquet(conf.output_path)}
+    explodedDF.map{d => d.write.mode(SaveMode.Overwrite).parquet(config.output_path); s"Succesfully saved parquet to ${config.output_path}"}
 
   }
-
 
 }

@@ -6,6 +6,8 @@ scalaVersion := f"${scalaMajorVersion}.2"
 val sparkVersion = "3.0.0"
 val hadoopVersion = "2.7.4"
 
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oN")
+
 libraryDependencies ++= Seq(
   "org.apache.spark" %% s"spark-core" % sparkVersion,
   "org.apache.spark" %% s"spark-sql" % sparkVersion,

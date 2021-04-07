@@ -1,9 +1,10 @@
 package mason.spark.configs
+
 import scopt.OptionParser
 
-object FormatConfig {
-  val zero: FormatConfig = FormatConfig()
-  val parser: OptionParser[FormatConfig] = new OptionParser[FormatConfig]("mason-spark") {
+object SummaryConfig {
+  val zero = SummaryConfig()
+  val parser = new OptionParser[SummaryConfig]("mason-spark") {
     head("mason-spark", "0.1")
     //    opt[String]('i', "input_path")
     //      .required()
@@ -12,7 +13,6 @@ object FormatConfig {
   }
 }
 
-case class FormatConfig() extends JobConfig
-
+case class SummaryConfig() extends JobConfig
 
 

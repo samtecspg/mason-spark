@@ -1,24 +1,10 @@
 package mason.spark.configs
 
-import mason.spark.jobs.MergeJob
 import scopt.OptionParser
 
 object MergeConfig {
-  def zero: MergeConfig = MergeConfig("", input_format="parquet", "")
-}
+  val zero = MergeConfig("", input_format="parquet", "")
 
-case class MergeConfig(
-  input_path: String,
-  input_format: String = "parquet",
-  output_path: String,
-  extract_file_path: Boolean = false,
-  repartition_keys: String = "",
-  read_headers: Boolean = true,
-  access_key: String = "",
-  secret_key: String = ""
-) {
-
-  // TODO: Replace with scopt functional parser
   val parser = new OptionParser[MergeConfig]("mason-spark") {
     head("mason-spark", "0.1")
     opt[String]('i', "input_path")
@@ -49,9 +35,15 @@ case class MergeConfig(
       .valueName("<secret_key>")
       .action((x,c) => c.copy(secret_key = x))
   }
-
-  def run() = {
-    MergeJob.run(this)
-  }
-
 }
+
+case class MergeConfig(
+  input_path: String,
+  input_format: String = "parquet",
+  output_path: String,
+  extract_file_path: Boolean = false,
+  repartition_keys: String = "",
+  read_headers: Boolean = true,
+  access_key: String = "",
+  secret_key: String = ""
+) extends JobConfig

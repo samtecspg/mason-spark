@@ -11,7 +11,7 @@ object ExtractPath extends Serializable {
     val withFileDF = df.withColumn("filename", input_file_name())
     def extractPath(basename: String, path: String): Array[String] = {
       val r = s"${input_path}"
-      return s"${path}"
+      s"${path}"
         .replaceFirst(r, "")
         .stripPrefix("/")
         .split("/", -1)

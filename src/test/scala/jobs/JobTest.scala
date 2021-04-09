@@ -1,4 +1,4 @@
-package jobs
+package test.jobs
 
 import mason.spark.configs.MainJobConfig
 import org.scalatest.BeforeAndAfter

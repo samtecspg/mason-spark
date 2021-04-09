@@ -1,4 +1,4 @@
-package jobs
+package test.jobs.merge
 
 import com.holdenkarau.spark.testing.{DataFrameSuiteBase, SharedSparkContext}
 import mason.spark.configs.MergeConfig
@@ -9,7 +9,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import scala.reflect.io.Directory
 import java.io.File
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.DataFrame
+import util.Spark.assertEquals
 
 class MergeJobTest extends AnyFunSuite with BeforeAndAfter with DataFrameSuiteBase with SharedSparkContext {
 
@@ -23,19 +23,6 @@ class MergeJobTest extends AnyFunSuite with BeforeAndAfter with DataFrameSuiteBa
   after {
     val directory = new Directory(new File(".tmp"))
     directory.deleteRecursively()
-  }
-
-  def assertEquals(df: DataFrame, data: String) = {
-    val splitted = data.split("\n")
-    val a = splitted
-      .zipWithIndex.filter{r => (Array(0,1,2,3,splitted.length,splitted.length - 1, splitted.length - 2).contains(r._2) == false)}
-      .map{r => r._1.stripPrefix("|").stripSuffix("|").split('|').map(_.trim()).toSeq.mkString(",")}.toSeq.sorted.mkString(",")
-
-    // Strictly a stringly test for now
-    val b = df.collect().map{r =>
-      r.toSeq.map{a => if (a == null) { "null" } else { a.toString() } }.mkString(",")
-    }.toSeq.sorted.mkString(",")
-    assert(a == b)
   }
 
   test("valid csv test") {
@@ -63,6 +50,7 @@ class MergeJobTest extends AnyFunSuite with BeforeAndAfter with DataFrameSuiteBa
     |wrench2| 19.0|
     +-------+-----+
     """.stripMargin
+
 
     assertEquals(mergedDF, expect)
   }

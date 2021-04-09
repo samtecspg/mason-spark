@@ -20,7 +20,6 @@ object MergeJob {
       d.write.mode(SaveMode.Overwrite).parquet(config.output_path)
       s"Succesfully saved parquet to ${config.output_path}"
     }
-
   }
 
 }

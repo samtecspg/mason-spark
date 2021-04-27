@@ -9,6 +9,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import scala.reflect.io.Directory
 import java.io.File
 import org.apache.log4j.{Level, Logger}
+import org.scalacheck.Prop.True
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import util.Spark.assertEquals
 
 
@@ -25,7 +27,14 @@ class SummaryJobTest extends AnyFunSuite with BeforeAndAfter with DataFrameSuite
     directory.deleteRecursively()
   }
 
-  test("valid csv test") {
+  test("path does not exist") {
+    val config = new SummaryConfig("src/test/resources/test_dne/", "text-csv", ".tmp/summary/", true, "", "")
+    val result = SummaryJob.run(config)
+    result.isLeft shouldBe true
+    result.left.get.getMessage.slice(0,20) shouldBe "Path does not exist:"
+  }
+
+  test("valid csv") {
     val config = new SummaryConfig("src/test/resources/test_csv_with_nulls/", "text-csv", ".tmp/summary/", true, "", "")
 
     SummaryJob.run(config)
@@ -44,7 +53,7 @@ class SummaryJobTest extends AnyFunSuite with BeforeAndAfter with DataFrameSuite
     assertEquals(summaryDF, expect)
   }
 
-
-
+  // test("valid parquet") {}
+  // test("valid json") {}
 
 }

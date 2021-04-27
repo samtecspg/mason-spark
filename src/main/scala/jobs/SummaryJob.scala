@@ -7,10 +7,10 @@ import org.apache.spark.sql.{DataFrame, SaveMode}
 
 object SummaryJob {
 
-  def run(config: SummaryConfig): Either[Exception, String] = {
+  def run(config: SummaryConfig): Either[Throwable, String] = {
     val spark = InitSparkSession.with_s3_support(config.access_key, config.secret_key)
     val reader = spark.read
-    val df: Either[Exception, DataFrame]  = ReadPath.from_format(config.input_format, config.input_path, reader, config.read_headers)
+    val df: Either[Throwable, DataFrame]  = ReadPath.from_format(config.input_format, config.input_path, reader, config.read_headers)
 
     def totalQuery(columns: Array[String]) = {
       s"""SELECT

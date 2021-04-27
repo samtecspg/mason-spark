@@ -8,10 +8,10 @@ import org.apache.spark.sql._
 
 object MergeJob {
 
-  def run(config: MergeConfig): Either[Exception, String] = {
+  def run(config: MergeConfig): Either[Throwable, String] = {
     val spark = InitSparkSession.with_s3_support(config.access_key, config.secret_key)
     val reader = spark.read.option("inferSchema", true).option("mergeSchema", true)
-    val df: Either[Exception, DataFrame]  = ReadPath.from_format(config.input_format, config.input_path, reader, config.read_headers)
+    val df: Either[Throwable, DataFrame]  = ReadPath.from_format(config.input_format, config.input_path, reader, config.read_headers)
 
     val abs_input_path = Paths.get(config.input_path).toUri().toString()
     val explodedDF = if (config.extract_file_path) { df.map { d => ExtractPath.extract(d, abs_input_path) }} else { df }

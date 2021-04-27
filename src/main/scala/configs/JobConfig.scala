@@ -14,7 +14,7 @@ trait JobConfig
 case class MainJobConfig(job: String = "unknown") {
   val bad: Exception = new Exception("Bad Configuration")
 
-  def run(otherArgs: Array[String]): Either[Exception, String] = job match {
+  def run(otherArgs: Array[String]): Either[Throwable, String] = job match {
     case "merge" => MergeConfig.parser.parse(otherArgs, MergeConfig.zero).toRight(bad).flatMap(MergeJob.run)
     case "preview" => PreviewConfig.parser.parse(otherArgs, PreviewConfig.zero).toRight(bad).flatMap(PreviewJob.run)
     case "summary" => SummaryConfig.parser.parse(otherArgs, SummaryConfig.zero).toRight(bad).flatMap(SummaryJob.run)
